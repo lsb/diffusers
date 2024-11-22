@@ -395,14 +395,15 @@ class StableDiffusionControlNetPipeline(
                 # layer.
                 prompt_embeds = self.text_encoder.text_model.final_layer_norm(prompt_embeds)
 
-        if self.text_encoder is not None:
-            prompt_embeds_dtype = self.text_encoder.dtype
-        elif self.unet is not None:
-            prompt_embeds_dtype = self.unet.dtype
-        else:
-            prompt_embeds_dtype = prompt_embeds.dtype
+            # LOLOLOLOL
+            if self.text_encoder is not None:
+                prompt_embeds_dtype = self.text_encoder.dtype
+            elif self.unet is not None:
+                prompt_embeds_dtype = self.unet.dtype
+            else:
+                prompt_embeds_dtype = prompt_embeds.dtype
 
-        prompt_embeds = prompt_embeds.to(dtype=prompt_embeds_dtype, device=device)
+            prompt_embeds = prompt_embeds.to(dtype=prompt_embeds_dtype, device=device)
 
         bs_embed, seq_len, _ = prompt_embeds.shape
         # duplicate text embeddings for each generation per prompt, using mps friendly method

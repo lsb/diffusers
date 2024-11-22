@@ -258,14 +258,15 @@ class DEISMultistepScheduler(SchedulerMixin, ConfigMixin):
             step_ratio = self.config.num_train_timesteps / num_inference_steps
             # creates integer timesteps by multiplying by ratio
             # casting to int to avoid issues when num_inference_step is power of 3
-            timesteps = np.arange(self.config.num_train_timesteps, 0, -step_ratio).round().copy().astype(np.int64)
-            timesteps -= 1
+            timesteps = np.arange(self.config.num_train_timesteps, 0, -step_ratio).round().copy().astype(np.int64) - 1
+            # LOLOLOLOLOLOL timesteps -= 1
         else:
             raise ValueError(
                 f"{self.config.timestep_spacing} is not supported. Please make sure to choose one of 'linspace', 'leading' or 'trailing'."
             )
 
-        sigmas = np.array(((1 - self.alphas_cumprod) / self.alphas_cumprod) ** 0.5)
+        #### LOLOLOLOL NO MORE sigmas = np.array(((1 - self.alphas_cumprod) / self.alphas_cumprod) ** 0.5)
+        sigmas = np.array([14.614647, 0.02916753])
         if self.config.use_karras_sigmas:
             log_sigmas = np.log(sigmas)
             sigmas = np.flip(sigmas).copy()
@@ -279,12 +280,17 @@ class DEISMultistepScheduler(SchedulerMixin, ConfigMixin):
             sigmas = self._convert_to_beta(in_sigmas=sigmas, num_inference_steps=self.num_inference_steps)
             timesteps = np.array([self._sigma_to_t(sigma, log_sigmas) for sigma in sigmas])
         else:
-            sigmas = np.interp(timesteps, np.arange(0, len(sigmas)), sigmas)
-            sigma_last = ((1 - self.alphas_cumprod[0]) / self.alphas_cumprod[0]) ** 0.5
-            sigmas = np.concatenate([sigmas, [sigma_last]]).astype(np.float32)
+            print(f"my sigma length is {len(sigmas)}")
+            ### NOT ANYMORE sigmas = sigmas[timesteps] # LOLOLOLOL if (timesteps >= 0 & timesteps < len(sigmas)).all() else 
+            # sigmas = np.interp(timesteps, np.arange(0, len(sigmas)), sigmas)
+            # sigma_last = ((1 - self.alphas_cumprod[0]) / self.alphas_cumprod[0]) ** 0.5
+            # sigmas = np.concatenate([sigmas, [sigma_last]]).astype(np.float32)
+            ### LOLOLOLOLOLOLOLOLOL MAKE IT GO AWAY
+            sigmas = np.array([14.614647, 0.02916753])
 
         self.sigmas = torch.from_numpy(sigmas)
         self.timesteps = torch.from_numpy(timesteps).to(device=device, dtype=torch.int64)
+        print(f"my little sigmas are {sigmas} and my timesteps are {timesteps}")
 
         self.num_inference_steps = len(timesteps)
 
@@ -717,10 +723,12 @@ class DEISMultistepScheduler(SchedulerMixin, ConfigMixin):
 
     # Copied from diffusers.schedulers.scheduling_dpmsolver_multistep.DPMSolverMultistepScheduler.index_for_timestep
     def index_for_timestep(self, timestep, schedule_timesteps=None):
+        return 0 # LOLOLOLOLOLOLOLOL
         if schedule_timesteps is None:
             schedule_timesteps = self.timesteps
 
         index_candidates = (schedule_timesteps == timestep).nonzero()
+        print(f"LOLOL index_candidates {index_candidates}")
 
         if len(index_candidates) == 0:
             step_index = len(self.timesteps) - 1
@@ -733,6 +741,7 @@ class DEISMultistepScheduler(SchedulerMixin, ConfigMixin):
         else:
             step_index = index_candidates[0].item()
 
+        print(f"LOLOLOL step_index {step_index}")
         return step_index
 
     # Copied from diffusers.schedulers.scheduling_dpmsolver_multistep.DPMSolverMultistepScheduler._init_step_index
