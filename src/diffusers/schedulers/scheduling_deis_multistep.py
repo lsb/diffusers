@@ -291,9 +291,9 @@ class DEISMultistepScheduler(SchedulerMixin, ConfigMixin):
         # self.timesteps = torch.from_numpy(timesteps).to(device=device, dtype=torch.int64)
         self.sigmas = torch.tensor([14.614647, 0.02916753], dtype=torch.float32)
         self.timesteps = torch.tensor([999], dtype=torch.int64)
-        print(f"finally my little sigmas are {sigmas} and my timesteps are {timesteps}")
+        print(f"finally my little sigmas are {self.sigmas} and my timesteps are {self.timesteps}")
 
-        self.num_inference_steps = len(timesteps)
+        self.num_inference_steps = len(self.timesteps)
 
         self.model_outputs = [
             None,
