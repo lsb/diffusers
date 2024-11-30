@@ -680,33 +680,33 @@ class StableDiffusionControlNetPipeline(
             assert False
 
         # Check `controlnet_conditioning_scale`
-        if (
-            isinstance(self.controlnet, ControlNetModel)
-            or is_compiled
-            and isinstance(self.controlnet._orig_mod, ControlNetModel)
-        ):
-            if not isinstance(controlnet_conditioning_scale, float):
-                raise TypeError("For single controlnet: `controlnet_conditioning_scale` must be type `float`.")
-        elif (
-            isinstance(self.controlnet, MultiControlNetModel)
-            or is_compiled
-            and isinstance(self.controlnet._orig_mod, MultiControlNetModel)
-        ):
-            if isinstance(controlnet_conditioning_scale, list):
-                if any(isinstance(i, list) for i in controlnet_conditioning_scale):
-                    raise ValueError(
-                        "A single batch of varying conditioning scale settings (e.g. [[1.0, 0.5], [0.2, 0.8]]) is not supported at the moment. "
-                        "The conditioning scale must be fixed across the batch."
-                    )
-            elif isinstance(controlnet_conditioning_scale, list) and len(controlnet_conditioning_scale) != len(
-                self.controlnet.nets
-            ):
-                raise ValueError(
-                    "For multiple controlnets: When `controlnet_conditioning_scale` is specified as `list`, it must have"
-                    " the same length as the number of controlnets"
-                )
-        else:
-            assert False
+        # if (
+        #     isinstance(self.controlnet, ControlNetModel)
+        #     or is_compiled
+        #     and isinstance(self.controlnet._orig_mod, ControlNetModel)
+        # ):
+        #     if not isinstance(controlnet_conditioning_scale, float):
+        #         raise TypeError("For single controlnet: `controlnet_conditioning_scale` must be type `float`.")
+        # elif (
+        #     isinstance(self.controlnet, MultiControlNetModel)
+        #     or is_compiled
+        #     and isinstance(self.controlnet._orig_mod, MultiControlNetModel)
+        # ):
+        #     if isinstance(controlnet_conditioning_scale, list):
+        #         if any(isinstance(i, list) for i in controlnet_conditioning_scale):
+        #             raise ValueError(
+        #                 "A single batch of varying conditioning scale settings (e.g. [[1.0, 0.5], [0.2, 0.8]]) is not supported at the moment. "
+        #                 "The conditioning scale must be fixed across the batch."
+        #             )
+        #     elif isinstance(controlnet_conditioning_scale, list) and len(controlnet_conditioning_scale) != len(
+        #         self.controlnet.nets
+        #     ):
+        #         raise ValueError(
+        #             "For multiple controlnets: When `controlnet_conditioning_scale` is specified as `list`, it must have"
+        #             " the same length as the number of controlnets"
+        #         )
+        # else:
+        #     assert False
 
         if not isinstance(control_guidance_start, (tuple, list)):
             control_guidance_start = [control_guidance_start]
