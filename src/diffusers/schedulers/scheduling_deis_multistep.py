@@ -240,56 +240,57 @@ class DEISMultistepScheduler(SchedulerMixin, ConfigMixin):
             device (`str` or `torch.device`, *optional*):
                 The device to which the timesteps should be moved to. If `None`, the timesteps are not moved.
         """
-        # "linspace", "leading", "trailing" corresponds to annotation of Table 2. of https://arxiv.org/abs/2305.08891
-        if self.config.timestep_spacing == "linspace":
-            timesteps = (
-                np.linspace(0, self.config.num_train_timesteps - 1, num_inference_steps + 1)
-                .round()[::-1][:-1]
-                .copy()
-                .astype(np.int64)
-            )
-        elif self.config.timestep_spacing == "leading":
-            step_ratio = self.config.num_train_timesteps // (num_inference_steps + 1)
-            # creates integer timesteps by multiplying by ratio
-            # casting to int to avoid issues when num_inference_step is power of 3
-            timesteps = (np.arange(0, num_inference_steps + 1) * step_ratio).round()[::-1][:-1].copy().astype(np.int64)
-            timesteps += self.config.steps_offset
-        elif self.config.timestep_spacing == "trailing":
-            step_ratio = self.config.num_train_timesteps / num_inference_steps
-            # creates integer timesteps by multiplying by ratio
-            # casting to int to avoid issues when num_inference_step is power of 3
-            timesteps = np.arange(self.config.num_train_timesteps, 0, -step_ratio).round().copy().astype(np.int64) - 1
-            # LOLOLOLOLOLOL timesteps -= 1
-        else:
-            raise ValueError(
-                f"{self.config.timestep_spacing} is not supported. Please make sure to choose one of 'linspace', 'leading' or 'trailing'."
-            )
+        # # "linspace", "leading", "trailing" corresponds to annotation of Table 2. of https://arxiv.org/abs/2305.08891
+        # if self.config.timestep_spacing == "linspace":
+        #     timesteps = (
+        #         np.linspace(0, self.config.num_train_timesteps - 1, num_inference_steps + 1)
+        #         .round()[::-1][:-1]
+        #         .copy()
+        #         .astype(np.int64)
+        #     )
+        # elif self.config.timestep_spacing == "leading":
+        #     step_ratio = self.config.num_train_timesteps // (num_inference_steps + 1)
+        #     # creates integer timesteps by multiplying by ratio
+        #     # casting to int to avoid issues when num_inference_step is power of 3
+        #     timesteps = (np.arange(0, num_inference_steps + 1) * step_ratio).round()[::-1][:-1].copy().astype(np.int64)
+        #     timesteps += self.config.steps_offset
+        # elif self.config.timestep_spacing == "trailing":
+        #     step_ratio = self.config.num_train_timesteps / num_inference_steps
+        #     # creates integer timesteps by multiplying by ratio
+        #     # casting to int to avoid issues when num_inference_step is power of 3
+        #     timesteps = np.arange(self.config.num_train_timesteps, 0, -step_ratio).round().copy().astype(np.int64) - 1
+        #     # LOLOLOLOLOLOL timesteps -= 1
+        # else:
+        #     raise ValueError(
+        #         f"{self.config.timestep_spacing} is not supported. Please make sure to choose one of 'linspace', 'leading' or 'trailing'."
+        #     )
 
         #### LOLOLOLOL NO MORE sigmas = np.array(((1 - self.alphas_cumprod) / self.alphas_cumprod) ** 0.5)
-        sigmas = np.array([14.614647, 0.02916753])
-        if self.config.use_karras_sigmas:
-            log_sigmas = np.log(sigmas)
-            sigmas = np.flip(sigmas).copy()
-            sigmas = self._convert_to_karras(in_sigmas=sigmas, num_inference_steps=num_inference_steps)
-            timesteps = np.array([self._sigma_to_t(sigma, log_sigmas) for sigma in sigmas]).round()
-            sigmas = np.concatenate([sigmas, sigmas[-1:]]).astype(np.float32)
-        elif self.config.use_exponential_sigmas:
-            sigmas = self._convert_to_exponential(in_sigmas=sigmas, num_inference_steps=self.num_inference_steps)
-            timesteps = np.array([self._sigma_to_t(sigma, log_sigmas) for sigma in sigmas])
-        elif self.config.use_beta_sigmas:
-            sigmas = self._convert_to_beta(in_sigmas=sigmas, num_inference_steps=self.num_inference_steps)
-            timesteps = np.array([self._sigma_to_t(sigma, log_sigmas) for sigma in sigmas])
-        else:
-            print(f"my sigma length is {len(sigmas)}")
-            ### NOT ANYMORE sigmas = sigmas[timesteps] # LOLOLOLOL if (timesteps >= 0 & timesteps < len(sigmas)).all() else 
-            # sigmas = np.interp(timesteps, np.arange(0, len(sigmas)), sigmas)
-            # sigma_last = ((1 - self.alphas_cumprod[0]) / self.alphas_cumprod[0]) ** 0.5
-            # sigmas = np.concatenate([sigmas, [sigma_last]]).astype(np.float32)
-            ### LOLOLOLOLOLOLOLOLOL MAKE IT GO AWAY
-            sigmas = np.array([14.614647, 0.02916753])
+        # if self.config.use_karras_sigmas:
+        #     log_sigmas = np.log(sigmas)
+        #     sigmas = np.flip(sigmas).copy()
+        #     sigmas = self._convert_to_karras(in_sigmas=sigmas, num_inference_steps=num_inference_steps)
+        #     timesteps = np.array([self._sigma_to_t(sigma, log_sigmas) for sigma in sigmas]).round()
+        #     sigmas = np.concatenate([sigmas, sigmas[-1:]]).astype(np.float32)
+        # elif self.config.use_exponential_sigmas:
+        #     sigmas = self._convert_to_exponential(in_sigmas=sigmas, num_inference_steps=self.num_inference_steps)
+        #     timesteps = np.array([self._sigma_to_t(sigma, log_sigmas) for sigma in sigmas])
+        # elif self.config.use_beta_sigmas:
+        #     sigmas = self._convert_to_beta(in_sigmas=sigmas, num_inference_steps=self.num_inference_steps)
+        #     timesteps = np.array([self._sigma_to_t(sigma, log_sigmas) for sigma in sigmas])
+        # else:
+        #     print(f"my sigma length is {len(sigmas)}")
+        #     ### NOT ANYMORE sigmas = sigmas[timesteps] # LOLOLOLOL if (timesteps >= 0 & timesteps < len(sigmas)).all() else
+        #     # sigmas = np.interp(timesteps, np.arange(0, len(sigmas)), sigmas)
+        #     # sigma_last = ((1 - self.alphas_cumprod[0]) / self.alphas_cumprod[0]) ** 0.5
+        #     # sigmas = np.concatenate([sigmas, [sigma_last]]).astype(np.float32)
+        #     ### LOLOLOLOLOLOLOLOLOL MAKE IT GO AWAY
+        #     sigmas = np.array([14.614647, 0.02916753])
 
-        self.sigmas = torch.from_numpy(sigmas)
-        self.timesteps = torch.from_numpy(timesteps).to(device=device, dtype=torch.int64)
+        # self.sigmas = torch.from_numpy(sigmas)
+        # self.timesteps = torch.from_numpy(timesteps).to(device=device, dtype=torch.int64)
+        self.sigmas = torch.tensor([14.614647, 0.02916753], dtype=torch.float32)
+        self.timesteps = torch.tensor([999], dtype=torch.int64)
         print(f"my little sigmas are {sigmas} and my timesteps are {timesteps}")
 
         self.num_inference_steps = len(timesteps)
